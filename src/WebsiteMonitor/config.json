@@ -1,0 +1,7 @@
+﻿{
+  "interval": 10,
+  "pages": [
+    { "url": "http://www.nowinstock.net/computers/videocards/amd/rx480/", "cssSelectors": [ "#data" ] }
+  ],
+  "notifiers": [ "FlashConsoleWindow", "ConsoleDiff", "GmailSelf", "Beep" ]
+}

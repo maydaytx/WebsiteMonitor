@@ -12,3 +12,4 @@ release
 log*.txt
 *.patch
 src/Packages
+src/.vs

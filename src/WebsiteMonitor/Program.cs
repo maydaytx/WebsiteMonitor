@@ -1,68 +1,59 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Windows.Forms;
 using CsQuery;
+using CsQuery.ExtensionMethods;
+using Newtonsoft.Json;
 
 namespace WebsiteMonitor
 {
 	internal static class Program
 	{
 		[STAThread]
-		private static void Main()
+		private static int Main()
 		{
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 
-			var types = typeof (Program).Assembly.GetTypes();
+			if (!File.Exists("config.json"))
+			{
+				Logger.Log("Could not find config.json", true);
+				return 1;
+			}
 
-			var notifiers = ConfigurationManager.AppSettings["Notifiers"]
-				.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
-				.Select(x =>
-				{
-					var type = types.First(y => y.Name == x.Trim() + "Notifier");
+			var config = JsonConvert.DeserializeObject<Config>(File.ReadAllText("config.json"));
 
-					return (INotifier) Activator.CreateInstance(type);
-				})
-				.ToList();
-
-			var selectors = ConfigurationManager.AppSettings["CssSelectors"]
-				.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
-				.Select(x => x.Trim())
-				.ToList();
-
-			var pages = ConfigurationManager.AppSettings["Pages"]
-				.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
-				.Select(x =>
-				{
-					var url = x.Trim();
-
-					return new Page {Url = url, Html = GetHtml(url, selectors)};
-				})
-				.ToList();
+			config.Pages.ForEach(x => x.Html = GetHtml(x.Url, x.CssSelectors));
 
 			while (true)
 			{
 				Logger.Log("Waiting...");
 
-				var interval = ConfigurationManager.AppSettings["Interval"];
-
-				Thread.Sleep(int.Parse(interval)*1000);
+				Thread.Sleep(config.Interval*1000);
 
 				Logger.Log("Refreshing pages...");
 
-				foreach (var page in pages)
+				foreach (var page in config.Pages)
 				{
-					var newHtml = GetHtml(page.Url, selectors);
+					var newHtml = GetHtml(page.Url, page.CssSelectors);
 
 					if (page.Html != newHtml)
 					{
-						foreach (var notifier in notifiers)
-							notifier.Notify(page.Url, page.Html, newHtml);
+						foreach (var notifier in config.GetNotifiers())
+						{
+							try
+							{
+								notifier.Notify(page.Url, page.Html, newHtml);
+							}
+							catch (Exception ex)
+							{
+								Logger.Log("Error: " + ex, true);
+							}
+						}
 
 						page.Html = newHtml;
 					}
@@ -90,7 +81,7 @@ namespace WebsiteMonitor
 				}
 			}
 
-			if (!selectors.Any())
+			if (selectors == null || !selectors.Any())
 				return html;
 
 			CQ csQuery = html;
@@ -102,12 +93,6 @@ namespace WebsiteMonitor
 				.Aggregate("", (current1, selectorHtml) => current1 + selectorHtml);
 
 			return html;
-		}
-
-		private class Page
-		{
-			public string Url { get; set; }
-			public string Html { get; set; }
 		}
 	}
 }
