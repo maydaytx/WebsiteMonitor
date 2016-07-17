@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using DiffMatchPatch;
 
 namespace WebsiteMonitor.Notifiers
@@ -13,14 +13,14 @@ namespace WebsiteMonitor.Notifiers
 			var diffs = differ.diff_main(previousHtml, newHtml);
 			differ.diff_cleanupSemantic(diffs);
 
-			if (diffs.Count(x => x.operation == Operation.INSERT) <= 3)
-				return;
-
-			Console.Beep(800, 800);
-			Thread.Sleep(200);
-			Console.Beep(800, 800);
-			Thread.Sleep(200);
-			Console.Beep(800, 800);
+			new Task(() =>
+			{
+				for (var i = 0; i < 100; ++i)
+				{
+					Console.Beep(700, 800);
+					Thread.Sleep(200);
+				}
+			}).Start();
 		}
 	}
 }

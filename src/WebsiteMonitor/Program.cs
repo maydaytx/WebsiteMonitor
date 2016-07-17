@@ -39,7 +39,18 @@ namespace WebsiteMonitor
 
 				foreach (var page in config.Pages)
 				{
-					var newHtml = GetHtml(page.Url, page.CssSelectors);
+					string newHtml;
+
+					try
+					{
+						newHtml = GetHtml(page.Url, page.CssSelectors);
+					}
+					catch (Exception ex)
+					{
+						Logger.Log("Error: " + ex, true);
+
+						continue;
+					}
 
 					if (page.Html != newHtml)
 					{
