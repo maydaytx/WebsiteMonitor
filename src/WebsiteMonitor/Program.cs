@@ -4,21 +4,16 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
-using System.Windows.Forms;
+using System.Threading.Tasks;
 using CsQuery;
-using CsQuery.ExtensionMethods;
 using Newtonsoft.Json;
 
 namespace WebsiteMonitor
 {
 	internal static class Program
 	{
-		[STAThread]
 		private static int Main()
 		{
-			Application.EnableVisualStyles();
-			Application.SetCompatibleTextRenderingDefault(false);
-
 			if (!File.Exists("config.json"))
 			{
 				Logger.Log("Could not find config.json", true);
@@ -27,38 +22,43 @@ namespace WebsiteMonitor
 
 			var config = JsonConvert.DeserializeObject<Config>(File.ReadAllText("config.json"));
 
-			config.Pages.ForEach(x => x.Html = GetHtml(x.Url, x.CssSelectors));
+			var cancellationTokenSource = new CancellationTokenSource();
 
-			while (true)
-			{
-				Logger.Log("Waiting...");
+			ConsoleKeyReader.Initialize(cancellationTokenSource.Token);
 
-				Thread.Sleep(config.Interval*1000);
-
-				Logger.Log("Refreshing pages...");
-
-				foreach (var page in config.Pages)
+			var tasks = config.Pages
+				.Select(x => new Task(() =>
 				{
-					string newHtml;
+					var html = GetHtml(x.Url, x.CssSelectors);
 
-					try
+					while (!cancellationTokenSource.IsCancellationRequested)
 					{
-						newHtml = GetHtml(page.Url, page.CssSelectors);
-					}
-					catch (Exception ex)
-					{
-						Logger.Log("Error: " + ex, true);
+						Delay(x.Interval, cancellationTokenSource.Token);
 
-						continue;
-					}
+						if (cancellationTokenSource.IsCancellationRequested)
+							continue;
 
-					if (page.Html != newHtml)
-					{
-						foreach (var notifier in config.GetNotifiers())
+						string newHtml;
+
+						try
+						{
+							newHtml = GetHtml(x.Url, x.CssSelectors);
+						}
+						catch (Exception ex)
+						{
+							Logger.Log("Error: " + ex, true);
+
+							continue;
+						}
+
+						if (html == newHtml)
+							continue;
+
+						foreach (var notifier in x.GetNotifiers())
 						{
 							try
 							{
-								notifier.Notify(page.Url, page.Html, newHtml);
+								notifier.Notify(x.Url, html, newHtml);
 							}
 							catch (Exception ex)
 							{
@@ -66,14 +66,22 @@ namespace WebsiteMonitor
 							}
 						}
 
-						page.Html = newHtml;
+						html = newHtml;
 					}
-					else
-					{
-						Logger.Log("No changes found");
-					}
-				}
-			}
+				}))
+				.ToList();
+
+			tasks.ForEach(x => x.Start());
+
+			ConsoleKeyReader.Subscribe(x =>
+			{
+				if (x.Key == ConsoleKey.Enter)
+					cancellationTokenSource.Cancel();
+			});
+
+			tasks.ForEach(x => x.Wait());
+
+			return 0;
 		}
 
 		private static string GetHtml(string url, ICollection<string> selectors)
@@ -104,6 +112,15 @@ namespace WebsiteMonitor
 				.Aggregate("", (current1, selectorHtml) => current1 + selectorHtml);
 
 			return html;
+		}
+
+		private static void Delay(int seconds, CancellationToken cancellationToken)
+		{
+			try
+			{
+				Task.Delay(seconds*1000, cancellationToken).Wait(cancellationToken);
+			}
+			catch { }
 		}
 	}
 }

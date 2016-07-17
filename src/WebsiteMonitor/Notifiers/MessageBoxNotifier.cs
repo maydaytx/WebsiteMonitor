@@ -2,7 +2,7 @@
 
 namespace WebsiteMonitor.Notifiers
 {
-	public class MessageBoxNotifier : INotifier
+	internal class MessageBoxNotifier : INotifier
 	{
 		public void Notify(string url, string previousHtml, string newHtml)
 		{

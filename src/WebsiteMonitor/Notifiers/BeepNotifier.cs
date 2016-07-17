@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace WebsiteMonitor.Notifiers
@@ -8,14 +7,21 @@ namespace WebsiteMonitor.Notifiers
 	{
 		public void Notify(string url, string previousHtml, string newHtml)
 		{
-			new Task(() =>
+			var running = true;
+
+			var disposer = ConsoleKeyReader.Subscribe(x => running = false);
+
+			Task.Run(() =>
 			{
-				for (var i = 0; i < 100; ++i)
+				while (running)
 				{
 					Console.Beep(700, 800);
-					Thread.Sleep(200);
+
+					Task.Delay(200).Wait();
 				}
-			}).Start();
+
+				disposer.Dispose();
+			});
 		}
 	}
 }
