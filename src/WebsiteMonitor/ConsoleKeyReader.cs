@@ -8,6 +8,8 @@ namespace WebsiteMonitor
 {
 	internal static class ConsoleKeyReader
 	{
+		private static bool _isInitialized;
+
 		private static readonly ConcurrentDictionary<Guid, Action<ConsoleKeyInfo>> Subscriptions = new ConcurrentDictionary<Guid, Action<ConsoleKeyInfo>>();
 
 		public static IDisposable Subscribe(Action<ConsoleKeyInfo> readKey)
@@ -21,6 +23,11 @@ namespace WebsiteMonitor
 
 		public static void Initialize(CancellationToken cancellationToken)
 		{
+			if (_isInitialized)
+				throw new Exception(nameof(ConsoleKeyReader) + " is already initialized");
+
+			_isInitialized = true;
+
 			Task.Run(() =>
 			{
 				while (!cancellationToken.IsCancellationRequested)

@@ -13,41 +13,26 @@ namespace WebsiteMonitor.Notifiers
 			var diffs = differ.diff_main(previousHtml, newHtml);
 			var abbreviatedDiffs = differ.diff_getAbbreviated(diffs);
 
-			var backgroundColor = Console.BackgroundColor;
-			var foregroundColor = Console.ForegroundColor;
-
 			foreach (var abbreviatedDiff in abbreviatedDiffs)
 			{
 				switch (abbreviatedDiff.operation)
 				{
 					case AbbreviatedDiffOperation.DELETE:
-						SetConsoleColors(backgroundColor, ConsoleColor.DarkRed);
-						Console.Write(abbreviatedDiff.text);
+						Logger.Log(abbreviatedDiff.text, color: ConsoleColor.DarkRed, newLine: false);
 						break;
 					case AbbreviatedDiffOperation.INSERT:
-						SetConsoleColors(backgroundColor, ConsoleColor.DarkGreen);
-						Console.Write(abbreviatedDiff.text);
+						Logger.Log(abbreviatedDiff.text, color: ConsoleColor.DarkGreen, newLine: false);
 						break;
 					case AbbreviatedDiffOperation.SNIP:
-						SetConsoleColors(backgroundColor, ConsoleColor.DarkCyan);
-						Console.WriteLine("...");
+						Logger.Log("...", color: ConsoleColor.DarkCyan, newLine: false);
 						break;
 					default:
-						SetConsoleColors(backgroundColor, foregroundColor);
-						Console.Write(abbreviatedDiff.text);
+						Logger.Log(abbreviatedDiff.text, newLine: false);
 						break;
 				}
 			}
 
-			SetConsoleColors(backgroundColor, foregroundColor);
-
-			Console.WriteLine();
-		}
-
-		private static void SetConsoleColors(ConsoleColor backgroundColor, ConsoleColor foregroundColor)
-		{
-			Console.BackgroundColor = backgroundColor;
-			Console.ForegroundColor = foregroundColor;
+			Logger.Log("");
 		}
 	}
 }

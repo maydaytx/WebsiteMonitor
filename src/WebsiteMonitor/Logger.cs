@@ -4,12 +4,27 @@ namespace WebsiteMonitor
 {
 	internal static class Logger
 	{
-		public static void Log(string message, bool error = false)
+		private static readonly ConsoleColor DefaultForegroundColor = Console.ForegroundColor;
+
+		public static void Log(string message, bool error = false, ConsoleColor? color = null, bool newLine = true)
 		{
-			if (error)
-				Console.Error.WriteLine(DateTime.Now.ToString("MMM d HH:mm:ss") + ": " + message);
-			else
-				Console.WriteLine(DateTime.Now.ToString("MMM d HH:mm:ss") + ": " + message);
+			if (color != null)
+			{
+				Console.ForegroundColor = color.Value;
+			}
+			else if (error)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+			}
+
+			var writer = error ? Console.Error : Console.Out;
+
+			writer.Write(DateTime.Now.ToString("MMM d HH:mm:ss") + ": " + message);
+
+			if (newLine)
+				writer.WriteLine();
+
+			Console.ForegroundColor = DefaultForegroundColor;
 		}
 	}
 }

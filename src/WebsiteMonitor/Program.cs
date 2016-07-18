@@ -15,7 +15,7 @@ namespace WebsiteMonitor
 		{
 			if (!File.Exists("config.json"))
 			{
-				Logger.Log("Could not find config.json", true);
+				Logger.Log("Could not find config.json", error: true);
 				return 1;
 			}
 
@@ -45,7 +45,7 @@ namespace WebsiteMonitor
 						}
 						catch (Exception ex)
 						{
-							Logger.Log("Error: " + ex, true);
+							Logger.Log("Error: " + ex, error: true);
 
 							continue;
 						}
@@ -61,7 +61,7 @@ namespace WebsiteMonitor
 							}
 							catch (Exception ex)
 							{
-								Logger.Log("Error: " + ex, true);
+								Logger.Log("Error: " + ex, error: true);
 							}
 						}
 
