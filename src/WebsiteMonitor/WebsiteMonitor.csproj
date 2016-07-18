@@ -65,6 +65,7 @@
     <Compile Include="Config.cs" />
     <Compile Include="ConsoleKeyReader.cs" />
     <Compile Include="DiffExtensions.cs" />
+    <Compile Include="ITransform.cs" />
     <Compile Include="Notifiers\BeepNotifier.cs" />
     <Compile Include="Notifiers\ConsoleDiffNotifier.cs" />
     <Compile Include="DiffMatchPatch.cs" />
@@ -74,6 +75,7 @@
     <Compile Include="Notifiers\MessageBoxNotifier.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Transforms\AmazonTransform.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

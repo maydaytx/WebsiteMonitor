@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -29,7 +28,7 @@ namespace WebsiteMonitor
 			var tasks = config.Pages
 				.Select(x => new Task(() =>
 				{
-					var html = GetHtml(x.Url, x.CssSelectors);
+					var html = GetHtml(x);
 
 					while (!cancellationTokenSource.IsCancellationRequested)
 					{
@@ -42,7 +41,7 @@ namespace WebsiteMonitor
 
 						try
 						{
-							newHtml = GetHtml(x.Url, x.CssSelectors);
+							newHtml = GetHtml(x);
 						}
 						catch (Exception ex)
 						{
@@ -73,24 +72,25 @@ namespace WebsiteMonitor
 
 			tasks.ForEach(x => x.Start());
 
-			ConsoleKeyReader.Subscribe(x =>
+			using (ConsoleKeyReader.Subscribe(x =>
 			{
-				if (x.Key == ConsoleKey.Enter)
+				if (x.Key == ConsoleKey.Escape)
 					cancellationTokenSource.Cancel();
-			});
-
-			tasks.ForEach(x => x.Wait());
+			}))
+			{
+				tasks.ForEach(x => x.Wait());
+			}
 
 			return 0;
 		}
 
-		private static string GetHtml(string url, ICollection<string> selectors)
+		private static string GetHtml(Page page)
 		{
 			string html;
 
-			Logger.Log("Fetching " + url + " ...");
+			Logger.Log("Fetching " + page.Url + " ...");
 
-			var request = WebRequest.Create(url);
+			var request = WebRequest.Create(page.Url);
 
 			using (var response = request.GetResponse())
 			{
@@ -100,18 +100,20 @@ namespace WebsiteMonitor
 				}
 			}
 
-			if (selectors == null || !selectors.Any())
+			html = page.GetTransforms().Aggregate(html, (current, transform) => transform.Execute(current));
+
+			if (string.IsNullOrWhiteSpace(page.IncludeSelector) && string.IsNullOrWhiteSpace(page.ExcludeSelector))
 				return html;
 
 			CQ csQuery = html;
 
-			html = selectors
-				.Select(selector => csQuery
-					.Select(selector)
-					.Aggregate("", (current, x) => current + x.OuterHTML))
-				.Aggregate("", (current1, selectorHtml) => current1 + selectorHtml);
+			if (!string.IsNullOrWhiteSpace(page.ExcludeSelector))
+				csQuery = csQuery.Select(page.ExcludeSelector).Remove();
 
-			return html;
+			if (!string.IsNullOrWhiteSpace(page.IncludeSelector))
+				csQuery = csQuery.Select(page.IncludeSelector);
+
+			return csQuery.SelectionHtml(true);
 		}
 
 		private static void Delay(int seconds, CancellationToken cancellationToken)
