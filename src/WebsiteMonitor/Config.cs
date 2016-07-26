@@ -47,12 +47,12 @@ namespace WebsiteMonitor
 
 		public IEnumerable<INotifier> GetNotifiers()
 		{
-			return _notifiers;
+			return _notifiers ?? Enumerable.Empty<INotifier>();
 		}
 
 		public IEnumerable<ITransform> GetTransforms()
 		{
-			return _transforms;
+			return _transforms ?? Enumerable.Empty<ITransform>();
 		}
 	}
 }

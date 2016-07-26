@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CsQuery;
 using Newtonsoft.Json;
+using WebsiteMonitor.Notifiers;
 
 namespace WebsiteMonitor
 {
@@ -74,8 +75,15 @@ namespace WebsiteMonitor
 
 			using (ConsoleKeyReader.Subscribe(x =>
 			{
-				if (x.Key == ConsoleKey.Escape)
-					cancellationTokenSource.Cancel();
+				switch (x.Key)
+				{
+					case ConsoleKey.Escape:
+						cancellationTokenSource.Cancel();
+						break;
+					case ConsoleKey.B:
+						new BeepNotifier().Notify(null, null, null);
+						break;
+				}
 			}))
 			{
 				tasks.ForEach(x => x.Wait());

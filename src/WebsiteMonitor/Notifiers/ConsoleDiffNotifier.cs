@@ -13,26 +13,27 @@ namespace WebsiteMonitor.Notifiers
 			var diffs = differ.diff_main(previousHtml, newHtml);
 			var abbreviatedDiffs = differ.diff_getAbbreviated(diffs);
 
-			foreach (var abbreviatedDiff in abbreviatedDiffs)
+			Logger.Log(x =>
 			{
-				switch (abbreviatedDiff.operation)
+				foreach (var abbreviatedDiff in abbreviatedDiffs)
 				{
-					case AbbreviatedDiffOperation.DELETE:
-						Logger.Log(abbreviatedDiff.text, color: ConsoleColor.DarkRed, newLine: false);
-						break;
-					case AbbreviatedDiffOperation.INSERT:
-						Logger.Log(abbreviatedDiff.text, color: ConsoleColor.DarkGreen, newLine: false);
-						break;
-					case AbbreviatedDiffOperation.SNIP:
-						Logger.Log("...", color: ConsoleColor.DarkCyan, newLine: false);
-						break;
-					default:
-						Logger.Log(abbreviatedDiff.text, newLine: false);
-						break;
+					switch (abbreviatedDiff.operation)
+					{
+						case AbbreviatedDiffOperation.DELETE:
+							x.Write(abbreviatedDiff.text, ConsoleColor.DarkRed);
+							break;
+						case AbbreviatedDiffOperation.INSERT:
+							x.Write(abbreviatedDiff.text, ConsoleColor.DarkGreen);
+							break;
+						case AbbreviatedDiffOperation.SNIP:
+							x.Write("...", ConsoleColor.DarkCyan);
+							break;
+						default:
+							x.Write(abbreviatedDiff.text);
+							break;
+					}
 				}
-			}
-
-			Logger.Log("");
+			});
 		}
 	}
 }

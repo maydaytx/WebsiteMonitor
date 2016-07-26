@@ -4,8 +4,7 @@
       "interval": 10,
       "url": "http://www.nowinstock.net/computers/videocards/amd/rx480/",
       "includeSelector": "#data",
-      "notifiers": [ "FlashConsoleWindow", "ConsoleDiff", "Beep" ],
-      "transforms": [ "Amazon" ]
+      "notifiers": [ "FlashConsoleWindow", "ConsoleDiff", "Beep" ]
     }
   ]
 }
